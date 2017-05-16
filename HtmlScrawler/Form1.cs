@@ -17,10 +17,13 @@ namespace HtmlScrawler
 
         private void button1_Click(object sender, EventArgs e)
         {
-            IList<HtmlData> htmlDatas = new List<HtmlData>();
+            // Make it generic
 
-            var dataReader = new DataReader(htmlDatas);
-            var datas = dataReader.ReadHtmlData(@"http://www.bcsprep.com/bcsquestionsbyyear.php?id=33");
+            var dataReader = new DataReader();
+            var htmlData = dataReader.ReadHtmlData(@"http://www.bcsprep.com/bcsquestionsbyyear.php?id=33");
+
+
+
 
             var dataWriter = new SqlWriter(datas, @"D:\tempData.sql");
             dataWriter.WriteData();

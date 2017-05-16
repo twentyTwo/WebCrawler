@@ -9,58 +9,41 @@ namespace HtmlScrawler
     using System.IO;
     using System.Net;
 
-    class DataReader
+    using HtmlAgilityPack;
+
+    internal class DataReader
     {
-        private IList<HtmlData> _htmlDataList;
+        private readonly IList<HtmlData> _htmlDatas;
 
-        public DataReader(IList<HtmlData> htmlDataList)
-        {
-            this._htmlDataList = htmlDataList;
-        }
+        private int _sourceUrl;
 
-        public IList<HtmlData> ReadHtmlData(string url)
+
+
+        public HtmlDocument ReadHtmlData(string url)
         {
             try
             {
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                StreamReader sr = new StreamReader(response.GetResponseStream());
-                HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
-                doc.Load(sr);
-                var nodess = doc.DocumentNode.DescendantsAndSelf("div").Where(tag => tag.Id.Contains("questionid"));
+                var request = (HttpWebRequest)WebRequest.Create(url);
+                var response = (HttpWebResponse)request.GetResponse();
 
-                foreach (var node in nodess)
+                var getResponseStream = response.GetResponseStream();
+
+                if (getResponseStream == Stream.Null)
                 {
-                    var htmlData = new HtmlData
-                                       {
-                                           Question = node.FirstChild.InnerText,
-                                           Option1 = node.FirstChild.NextSibling.NextSibling.InnerText,
-                                           Option2 =
-                                               node.FirstChild.NextSibling.NextSibling.NextSibling.InnerText,
-                                           Option3 =
-                                               node.FirstChild.NextSibling.NextSibling.NextSibling.NextSibling
-                                               .InnerText,
-                                           Option4 =
-                                               node.FirstChild.NextSibling.NextSibling.NextSibling.NextSibling
-                                               .NextSibling.InnerText,
-                                           CorrectAnswer =
-                                               node.FirstChild.NextSibling.NextSibling.NextSibling.NextSibling
-                                               .NextSibling.NextSibling.Attributes["value"].Value
-                                       };
-
-
-
-
-                    this._htmlDataList.Add(htmlData);
+                    throw new ArgumentNullException($"No response found for the web request which called {url}");
                 }
-                sr.Close();
 
-                return this._htmlDataList;
+                var streamReader = new StreamReader(response.GetResponseStream());
+                var htmlDocument = new HtmlDocument();
+                htmlDocument.Load(streamReader);
+                streamReader.Close();
+                return htmlDocument;
             }
             catch (Exception ex)
             {
                 throw new Exception("Error in reading htmlData", ex);
             }
         }
+
     }
 }
